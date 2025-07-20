@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-training
+  namespace: chatbot
+  labels:
+    app: chatbot-training
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbot-training
+  template:
+    metadata:
+      labels:
+        app: chatbot-training
+    spec:
+      containers:
+        - name: chatbot-training
+          image: docker.io/umesh1212/chatbot-traininig:v1
+          ports:
+            - containerPort: 80
+          env:
+            - name: GEMINI_API_KEY
+              value: "fake_"
+            - name: QDRANT_URL
+              value: "http://localhost:6333"
+            - name: APIKEY
+              value: "fake_api_key"
+            - name: COLLECTION_NAME
+              value: "chatbot-docs"
+            - name: AI_MODEL
+              value: "gemini-2.5-pro"
+            - name: TEXT_EMBED
+              value: "text-embedding-005"
+            - name: APP_TITLE
+              value: "🤖 Chatbot"
+            - name: APP_CONTENT
+              value: "Welcome! How can I help you?"
+            - name: RABBITMQ_URL
+              value: "amqps://fake:jnb7-O@fuji.lmq.cloudamqp.com/fake"
+            - name: QUEUE_NAME
+              value: "test"
+            - name: DOCS_ROOT_DIR
+              value: "../chatbot-docs/content"
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-training
+  namespace: chatbot
+spec:
+  selector:
+    app: chatbot-training
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP

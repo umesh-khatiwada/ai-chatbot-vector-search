@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot
+  namespace: chatbot
+  labels:
+    app: chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbot
+  template:
+    metadata:
+      labels:
+        app: chatbot
+    spec:
+      containers:
+        - name: chatbot
+          image: docker.io/umesh1212/chatbot:v1
+          ports:
+            - containerPort: 8501
+          env:
+            - name: GEMINI_API_KEY
+              value: "fake_"
+            - name: QDRANT_URL
+              value: "http://localhost:6333"
+            - name: APIKEY
+              value: "fkjabjkbsajkbasjkdbaksjbdkabdkjbadkjbadbauosdib"
+            - name: COLLECTION_NAME
+              value: "chatbot-docs"
+            - name: AI_MODEL
+              value: "gemini-2.5-pro"
+            - name: TEXT_EMBED
+              value: "text-embedding-005"
+            - name: APP_TITLE
+              value: "🤖 Chatbot"
+            - name: APP_CONTENT
+              value: "Welcome! How can I help you?"
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot
+  namespace: chatbot
+spec:
+  selector:
+    app: chatbot
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8501
+  type: ClusterIP
