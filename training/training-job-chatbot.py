@@ -1,11 +1,12 @@
-from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
+# from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Qdrant
 import os
 
 file_paths = (
-    "content/faq.md"
+    "content/faq.md",
 )
 docs_count = 0
 files_count = 0
@@ -23,7 +24,10 @@ for file_path in file_paths:
     print("Text splitted")
 
     # [START gke_databases_qdrant_docker_embed_docs_embed]
-    embeddings = VertexAIEmbeddings("text-embedding-005")
+    # For testing without billing, you can use a simple embedding or comment this out
+    # embeddings = VertexAIEmbeddings("text-embedding-005")
+    # Alternative: use OpenAI embeddings (requires OPENAI_API_KEY environment variable)
+    embeddings = OpenAIEmbeddings()
     # [END gke_databases_qdrant_docker_embed_docs_embed]
     print("Embeddings created")
 
