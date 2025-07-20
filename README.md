@@ -1,6 +1,286 @@
-# 🤖 AI Chatbot with Vector Search
+# AI Chatbot Vector Search
 
-A sophisticated AI chatbot application built with **Streamlit**, **Google Gemini API**, and **Qdrant** that provides intelligent, context-aware responses using advanced vector search technology. The system features document embedding, semantic search, and an intuitive chat interface with real-time status monitoring.
+A real-time AI chatbot training system with RabbitMQ queue support and vector search capabilities using Qdrant and Google Gemini API.
+
+## 🚀 Features
+
+- **Dual Training Modes**: Train from local files and dynamic queue content
+- **Real-time Processing**: Queue-based training for dynamic content updates
+- **Vector Search**: Powered by Qdrant vector database
+- **AI Embeddings**: Google Gemini API for high-quality text embeddings
+- **Cloud Queue Support**: CloudAMQP integration with SSL
+- **Flexible Content**: Support both file-based and direct content training
+- **Production Ready**: Comprehensive error handling and monitoring
+
+## 📋 Prerequisites
+
+- Python 3.8+
+- Qdrant vector database
+- Google Gemini API key
+- RabbitMQ (local or CloudAMQP)
+
+## 🛠️ Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/umesh-khatiwada/ai-chatbot-vector-search.git
+   cd ai-chatbot-vector-search
+   ```
+
+2. **Set up the training environment**
+   ```bash
+   cd training
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. **Set up the chatbot environment**
+   ```bash
+   cd ../chatbot
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment variables**
+   ```bash
+   # In training directory
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+## ⚙️ Configuration
+
+Create a `.env` file in the `training` directory:
+
+```env
+# Google Gemini API
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Qdrant Database
+QDRANT_URL=http://localhost:6333
+QDRANT_COLLECTION=chatbot-docs
+
+# RabbitMQ Configuration
+RABBITMQ_URL=amqps://username:password@host/vhost
+QUEUE_NAME=training_tasks
+
+# Training Configuration
+DOCS_ROOT_DIR=../chatbot-docs/content
+```
+
+## 🚀 Quick Start
+
+### 1. Start Qdrant Database
+```bash
+# Using Docker
+docker run -p 6333:6333 qdrant/qdrant
+```
+
+### 2. Train Your Chatbot
+
+**Option A: Default File Training**
+```bash
+cd training
+source venv/bin/activate
+python3 training-job-gemini.py
+```
+
+**Option B: Queue-based Training**
+```bash
+# Send content via queue
+python3 manage_queue.py send
+
+# Or send custom content
+python3 manage_queue.py custom
+```
+
+### 3. Start the Chatbot
+```bash
+cd chatbot
+source venv/bin/activate
+python3 chat.py
+```
+
+## 📖 Usage Guide
+
+### Training System
+
+The training system supports two modes:
+
+1. **File-based Training**: Processes files from the `DOCS_ROOT_DIR`
+2. **Queue-based Training**: Processes content sent via RabbitMQ
+
+#### Queue Message Formats
+
+**Content-based Message (Recommended)**:
+```json
+{
+    "content": "Your text content here...",
+    "document_id": "unique_identifier",
+    "source": "source_name",
+    "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+**File-based Message (Legacy)**:
+```json
+{
+    "file_path": "document.md",
+    "source": "file_system",
+    "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+### Queue Management
+
+Use the queue management script for various operations:
+
+```bash
+# Check queue status
+python3 manage_queue.py status
+
+# Send test message
+python3 manage_queue.py send
+
+# Send custom content
+python3 manage_queue.py custom
+
+# Reset queue
+python3 manage_queue.py reset
+
+# Interactive mode
+python3 manage_queue.py
+```
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Content       │    │   RabbitMQ       │    │   Training      │
+│   Sources       │───▶│   Queue          │───▶│   System        │
+│                 │    │                  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                        │
+                                                        ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Chatbot       │◀───│   Vector Search  │◀───│   Qdrant        │
+│   Interface     │    │   Engine         │    │   Database      │
+│                 │    │                  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                        ▲
+                                                        │
+                                               ┌─────────────────┐
+                                               │   Gemini API    │
+                                               │   Embeddings    │
+                                               │                 │
+                                               └─────────────────┘
+```
+
+## 🔧 Development
+
+### Project Structure
+```
+ai-chatbot-vector-search/
+├── README.md
+├── LICENSE
+├── .gitignore
+├── chatbot/
+│   ├── chat.py              # Main chatbot interface
+│   ├── requirements.txt     # Chatbot dependencies
+│   └── Dockerfile          # Chatbot container
+├── training/
+│   ├── training-job-gemini.py    # Main training script
+│   ├── manage_queue.py           # Queue management utility
+│   ├── requirements.txt          # Training dependencies
+│   ├── .env.example             # Environment template
+│   └── README.md               # Training documentation
+└── docs/
+    └── API.md              # API documentation
+```
+
+### Running Tests
+
+```bash
+# Test Gemini API connection
+cd training
+python3 test-gemini-api.py
+
+# Test queue connectivity
+python3 manage_queue.py status
+```
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 🐳 Docker Support
+
+### Training Container
+```bash
+cd training
+docker build -t ai-chatbot-training .
+docker run --env-file .env ai-chatbot-training
+```
+
+### Chatbot Container
+```bash
+cd chatbot
+docker build -t ai-chatbot-app .
+docker run -p 8080:8080 ai-chatbot-app
+```
+
+## 📊 Monitoring
+
+The system provides comprehensive logging and monitoring:
+
+- Training progress with chunk counts
+- Queue message processing status
+- Vector database operations
+- Error tracking and recovery
+
+## 🔒 Security
+
+- SSL/TLS support for CloudAMQP connections
+- Environment variable configuration
+- Input validation and sanitization
+- Error handling without data exposure
+
+## 🤝 Support
+
+- **Issues**: [GitHub Issues](https://github.com/umesh-khatiwada/ai-chatbot-vector-search/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/umesh-khatiwada/ai-chatbot-vector-search/discussions)
+- **Documentation**: [Wiki](https://github.com/umesh-khatiwada/ai-chatbot-vector-search/wiki)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Qdrant](https://qdrant.tech/) for vector database
+- [Google Gemini](https://ai.google.dev/) for embeddings API
+- [RabbitMQ](https://www.rabbitmq.com/) for message queuing
+- [CloudAMQP](https://www.cloudamqp.com/) for managed RabbitMQ
+
+## 📈 Roadmap
+
+- [ ] Web UI for queue management
+- [ ] Batch processing support
+- [ ] Multiple embedding models
+- [ ] Advanced search filters
+- [ ] REST API endpoints
+- [ ] Kubernetes deployment
+- [ ] Monitoring dashboard
+
+---
+
+**Made with ❤️ by [Umesh Khatiwada](https://github.com/umesh-khatiwada)**
 
 ## ✨ Features
 
