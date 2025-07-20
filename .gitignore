@@ -1,2 +1,6 @@
 training/venv/
 training/.env
+chatbot/.env
+chatbot/venv/
+chatbot/__pycache__/
+training/
