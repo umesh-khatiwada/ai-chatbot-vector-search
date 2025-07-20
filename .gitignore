@@ -1,6 +1,57 @@
+# Virtual environments
 training/venv/
+chatbot/venv/
+venv/
+env/
+
+# Environment variables (contains API keys)
 training/.env
 chatbot/.env
-chatbot/venv/
+.env
+
+# Python cache
 chatbot/__pycache__/
-training/
+training/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+training/training.log
+chatbot/app.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Database files (if any)
+*.db
+*.sqlite
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Streamlit
+.streamlit/
