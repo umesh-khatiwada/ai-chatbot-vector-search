@@ -1,7 +1,20 @@
 #!/usr/bin/env python3
 """
 CloudAMQP Queue Management Script
-Helps manage queues in CloudAMQP with proper SSL handling
+
+A comprehensive utility for managing RabbitMQ queues with CloudAMQP support.
+Provides functionality for sending messages, monitoring queue status, and
+managing queue lifecycle operations.
+
+Features:
+- SSL/TLS support for CloudAMQP
+- Interactive and command-line interfaces
+- Content-based and file-based message support
+- Queue monitoring and management
+- Error handling and recovery
+
+Author: Umesh Khatiwada
+License: MIT
 """
 
 import os
@@ -11,9 +24,10 @@ import ssl
 import urllib.parse
 from dotenv import load_dotenv
 
-# Load environment
+# Load environment configuration
 load_dotenv()
 
+# Configuration constants
 RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
 QUEUE_NAME = os.getenv("QUEUE_NAME", "test")
 

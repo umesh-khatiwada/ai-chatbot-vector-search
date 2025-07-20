@@ -1,6 +1,26 @@
+#!/usr/bin/env python3
+"""
+AI Chatbot Training System
+
+A comprehensive training system that supports both file-based and queue-based
+content processing for real-time chatbot knowledge updates.
+
+Features:
+- Dual-phase training (default files + queue listener)
+- Google Gemini API for embeddings
+- Qdrant vector database storage
+- RabbitMQ queue support with SSL
+- Comprehensive error handling
+
+Author: Umesh Khatiwada
+License: MIT
+"""
+
 import os
 import json
 import pika
+import ssl
+import urllib.parse
 import google.generativeai as genai
 from dotenv import load_dotenv
 from langchain_community.document_loaders import TextLoader
@@ -10,9 +30,11 @@ from qdrant_client.models import Distance, VectorParams, PointStruct
 
 # Load environment variables
 load_dotenv()
+
+# Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
-COLLECTION_NAME = os.getenv("COLLECTION_NAME", "chatbot-docs")
+COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "chatbot-docs")
 RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
 QUEUE_NAME = os.getenv("QUEUE_NAME", "embedding_tasks")
 ROOT_DIR = os.getenv("DOCS_ROOT_DIR", "../chatbot-docs/content")

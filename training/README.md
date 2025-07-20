@@ -1,53 +1,312 @@
-# 🔄 Training Pipeline
+# AI Chatbot Training System
 
-Document processing and embedding pipeline that prepares your knowledge base for the AI chatbot using Google Gemini API and Qdrant vector database.
+Advanced training system with dual-mode processing: file-based and real-time queue-based content training using Google Gemini API and Qdrant vector database.
 
-## 🎯 Purpose
+## 🚀 Features
 
-This training pipeline:
-- 📄 **Processes** your documents (PDF, Markdown, Text)
-- ✂️ **Splits** them into semantic chunks
-- 🧠 **Creates** embeddings using Gemini API
-- 💾 **Stores** vectors in Qdrant for fast retrieval
+- **Dual Training Modes**: File-based and queue-based content processing
+- **Real-time Processing**: RabbitMQ integration for dynamic content updates  
+- **Vector Embeddings**: Google Gemini API for high-quality text embeddings
+- **Vector Storage**: Qdrant database for efficient similarity search
+- **Cloud Queue Support**: CloudAMQP with SSL/TLS security
+- **Flexible Content**: Direct content or file-based training
+- **Error Recovery**: Comprehensive error handling and retry mechanisms
 
-## 🚀 Quick Start
+## 📋 Prerequisites
 
-### 1. Prerequisites
+- Python 3.8+
+- Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
+- Qdrant vector database
+- RabbitMQ (optional, for queue-based training)
 
-- Python 3.10+
-- Gemini API Key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-- Qdrant database running locally or in cloud
+## 🛠️ Quick Setup
 
-### 2. Install Dependencies
+### 1. Install Dependencies
 
 ```bash
-# Make sure you're in the training directory
-cd training
-
-# Create virtual environment (recommended)
+# Create virtual environment
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install required packages
+# Install requirements
 pip install -r requirements.txt
-
-# Additional packages for Gemini API
-pip install google-generativeai python-dotenv
 ```
 
-### 3. Set Up Environment
-
-Create a `.env` file in this directory:
+### 2. Configure Environment
 
 ```bash
-# Gemini API Key (required)
+# Copy environment template
+cp .env.example .env
+
+# Edit with your configuration
+nano .env
+```
+
+### 3. Environment Variables
+
+```env
+# Google Gemini API Configuration
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Qdrant Configuration
+# Qdrant Database Configuration  
 QDRANT_URL=http://localhost:6333
-COLLECTION_NAME=chatbot-docs
+QDRANT_COLLECTION=chatbot-docs
 
-# Optional: For Qdrant Cloud
+# RabbitMQ Configuration (Optional)
+RABBITMQ_URL=amqps://username:password@host.cloudamqp.com/vhost
+QUEUE_NAME=training_tasks
+
+# Training Configuration
+DOCS_ROOT_DIR=../chatbot-docs/content
+```
+
+### 4. Start Qdrant Database
+
+```bash
+# Using Docker (recommended)
+docker run -p 6333:6333 qdrant/qdrant
+
+# Or install locally - see Qdrant documentation
+```
+
+## 🚀 Usage
+
+### Basic File Training
+
+Process documents from your content directory:
+
+```bash
+source venv/bin/activate
+python3 training-job-gemini.py
+```
+
+### Queue-Based Training
+
+#### Send Test Content
+```bash
+python3 manage_queue.py send
+```
+
+#### Send Custom Content  
+```bash
+python3 manage_queue.py custom
+```
+
+#### Monitor Queue
+```bash
+python3 manage_queue.py status
+```
+
+#### Reset Queue
+```bash
+python3 manage_queue.py reset
+```
+
+#### Interactive Mode
+```bash
+python3 manage_queue.py
+```
+
+## 📖 Training Modes
+
+### Mode 1: File-Based Training
+
+Processes files from the `DOCS_ROOT_DIR` directory:
+- Automatically scans for markdown, text, and other supported formats
+- Splits documents into optimal chunks
+- Creates embeddings for each chunk
+- Stores in Qdrant with metadata
+
+### Mode 2: Queue-Based Training  
+
+Real-time content processing via RabbitMQ:
+- Receives content through message queue
+- Processes content directly without file I/O
+- Supports both content and file path messages
+- Enables dynamic training without restarts
+
+## 🔄 Message Formats
+
+### Content-Based Message (Recommended)
+
+Send content directly for immediate processing:
+
+```json
+{
+    "content": "Your text content here...",
+    "document_id": "unique_identifier", 
+    "source": "content_source",
+    "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+### File-Based Message (Legacy Support)
+
+Reference files to be processed:
+
+```json
+{
+    "file_path": "document.md",
+    "source": "file_system",
+    "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+## 🔧 Core Components
+
+### `training-job-gemini.py`
+Main training script with dual-phase operation:
+- **Phase 1**: Processes default files from content directory
+- **Phase 2**: Listens for queue messages and processes them
+
+Key functions:
+- `train_default_files()`: Process files from root directory
+- `process_file()`: Process individual files
+- `process_content_directly()`: Process content from queue messages
+- `get_embedding()`: Create embeddings using Gemini API
+
+### `manage_queue.py`
+Queue management utility for RabbitMQ operations:
+- Send test and custom messages
+- Monitor queue status
+- Reset queue state
+- Interactive queue management
+
+### `test-gemini-api.py`
+API connectivity testing utility
+
+## 🐳 Docker Support
+
+### Build Training Container
+```bash
+docker build -t ai-chatbot-training .
+```
+
+### Run with Environment File
+```bash
+docker run --env-file .env ai-chatbot-training
+```
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**Qdrant Connection Failed**
+```bash
+# Start Qdrant using Docker
+docker run -p 6333:6333 qdrant/qdrant
+
+# Check if port 6333 is accessible
+curl http://localhost:6333/collections
+```
+
+**RabbitMQ SSL Issues**
+```bash
+# Verify CloudAMQP URL format
+# Should be: amqps://username:password@host.cloudamqp.com/vhost
+
+# Test connection
+python3 manage_queue.py status
+```
+
+**Queue Declaration Errors**
+```bash
+# Reset problematic queue
+python3 manage_queue.py reset
+```
+
+**Gemini API Issues**
+```bash
+# Test API key
+python3 test-gemini-api.py
+
+# Check API quota and billing
+```
+
+### Debug Mode
+
+Enable detailed logging:
+```bash
+export DEBUG=1
+python3 training-job-gemini.py
+```
+
+## 📊 Performance Optimization
+
+### Chunking Strategy
+Adjust text splitting parameters in the code:
+```python
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,    # Increase for longer contexts
+    chunk_overlap=200   # Adjust overlap for continuity
+)
+```
+
+### Batch Processing
+Process multiple documents efficiently:
+- Queue multiple messages for batch processing
+- Use connection pooling for database operations
+- Implement prefetch for queue consumers
+
+### Monitoring
+The system provides comprehensive logging:
+- Training progress with chunk counts
+- Queue processing status
+- Vector database operations
+- Error tracking and recovery
+
+## 🛡️ Security
+
+- **Environment Variables**: All sensitive data in `.env` files
+- **SSL/TLS**: Secure connections to CloudAMQP
+- **Input Validation**: Sanitized content processing
+- **Error Handling**: No sensitive data in error messages
+
+## 🤝 API Reference
+
+### Environment Variables
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `GEMINI_API_KEY` | Google Gemini API key | - | ✅ |
+| `QDRANT_URL` | Qdrant database URL | `http://localhost:6333` | ✅ |
+| `QDRANT_COLLECTION` | Vector collection name | `chatbot-docs` | ✅ |
+| `RABBITMQ_URL` | RabbitMQ connection URL | - | ❌ |
+| `QUEUE_NAME` | Queue name for tasks | `training_tasks` | ❌ |
+| `DOCS_ROOT_DIR` | Default files directory | `../content` | ❌ |
+
+### Command Line Interface
+
+```bash
+# Training Commands
+python3 training-job-gemini.py              # Start training system
+python3 test-gemini-api.py                  # Test API connection
+
+# Queue Management Commands  
+python3 manage_queue.py status              # Check queue status
+python3 manage_queue.py send                # Send test message
+python3 manage_queue.py custom              # Send custom content
+python3 manage_queue.py reset               # Reset queue
+python3 manage_queue.py                     # Interactive mode
+```
+
+## 📚 Additional Resources
+
+- [Qdrant Documentation](https://qdrant.tech/documentation/)
+- [Google Gemini API Guide](https://ai.google.dev/docs)
+- [RabbitMQ Python Tutorial](https://www.rabbitmq.com/tutorials/tutorial-one-python.html)
+- [CloudAMQP Setup Guide](https://www.cloudamqp.com/docs/index.html)
+
+## 🐛 Contributing
+
+1. Follow PEP 8 style guidelines
+2. Add comprehensive tests for new features
+3. Update documentation for changes
+4. Submit pull requests with clear descriptions
+
+---
+
+**Part of the AI Chatbot Vector Search project** | [Main Repository](../README.md)
 # APIKEY=your_qdrant_cloud_api_key
 ```
 
