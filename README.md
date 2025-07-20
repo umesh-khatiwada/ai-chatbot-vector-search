@@ -21,8 +21,8 @@ A sophisticated chatbot application built with Streamlit, LangChain, and Google 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/umesh-khatiwada/chatbot.git
-cd chatbot
+git clone https://github.com/umesh-khatiwada/ai-chatbot-vector-search.git
+cd ai-chatbot-vector-search
 ```
 
 ### 2. Create and Activate Virtual Environment
@@ -56,7 +56,7 @@ conda activate chatbot
 #### For Chatbot Application
 
 ```bash
-cd chatbot
+cd ai-chatbot-vector-search/chatbot
 pip install -r requirements.txt
 ```
 
