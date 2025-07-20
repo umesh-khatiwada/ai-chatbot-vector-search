@@ -67,7 +67,7 @@ RABBITMQ_URL=amqps://username:password@host/vhost
 QUEUE_NAME=training_tasks
 
 # Training Configuration
-DOCS_ROOT_DIR=../chatbot-docs/content
+DOCS_ROOT_DIR=./chatbot-docs/content
 ```
 
 ## 🚀 Quick Start

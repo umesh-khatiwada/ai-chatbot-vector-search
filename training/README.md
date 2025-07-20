@@ -57,7 +57,7 @@ RABBITMQ_URL=amqps://username:password@host.cloudamqp.com/vhost
 QUEUE_NAME=training_tasks
 
 # Training Configuration
-DOCS_ROOT_DIR=../chatbot-docs/content
+DOCS_ROOT_DIR=./chatbot-docs/content
 ```
 
 ### 4. Start Qdrant Database
@@ -324,7 +324,7 @@ curl http://localhost:6333/health
 
 ```bash
 # Create document directory structure
-mkdir -p ../chatbot-docs/content
+mkdir -p ./chatbot-docs/content
 
 # Add your documents to the content directory
 # Supported formats: .md, .txt, .pdf
@@ -332,7 +332,7 @@ mkdir -p ../chatbot-docs/content
 
 Example structure:
 ```
-../chatbot-docs/
+./chatbot-docs/
 └── content/
     ├── faq.md
     ├── user-guide.md
@@ -511,10 +511,10 @@ curl http://localhost:6333/collections
 #### 📄 File Not Found
 ```bash
 # Check file paths
-ls -la ../chatbot-docs/content/
+ls -la ./chatbot-docs/content/
 
 # Verify file permissions
-chmod 644 ../chatbot-docs/content/*.md
+chmod 644 ./chatbot-docs/content/*.md
 ```
 
 #### 🧠 Embedding Errors

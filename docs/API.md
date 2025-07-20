@@ -222,7 +222,7 @@ def callback(ch, method, properties, body):
 |----------|-------------|---------|
 | `RABBITMQ_URL` | RabbitMQ connection URL | `amqp://guest:guest@localhost:5672/` |
 | `QUEUE_NAME` | Queue name for training tasks | `test` |
-| `DOCS_ROOT_DIR` | Default files directory | `../chatbot-docs/content` |
+| `DOCS_ROOT_DIR` | Default files directory | `./chatbot-docs/content` |
 
 ### SSL Configuration
 

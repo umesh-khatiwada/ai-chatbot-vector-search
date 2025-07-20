@@ -42,14 +42,14 @@ spec:
             - name: QUEUE_NAME
               value: "test"
             - name: DOCS_ROOT_DIR
-              value: "../chatbot-docs/content"
+              value: "./chatbot-docs/content"
           resources:
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: "100Mi"
+              cpu: "100m"
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "25Mi"
+              cpu: "25m"
 ---
 apiVersion: v1
 kind: Service

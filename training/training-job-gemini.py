@@ -37,7 +37,7 @@ QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "chatbot-docs")
 RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
 QUEUE_NAME = os.getenv("QUEUE_NAME", "embedding_tasks")
-ROOT_DIR = os.getenv("DOCS_ROOT_DIR", "../chatbot-docs/content")
+ROOT_DIR = os.getenv("DOCS_ROOT_DIR", "./chatbot-docs/content")
 
 # Configure Gemini
 if not GEMINI_API_KEY:
