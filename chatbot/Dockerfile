@@ -12,6 +12,6 @@ COPY chat.py chat.py
 # RUN mkdir -p /root/.config/gcloud
 # COPY application_default_credentials.json /root/.config/gcloud/application_default_credentials.json
 
-CMD ["run","/app/chat.py"]
+CMD ["run","/app/chat-gemini.py"]
 ENTRYPOINT ["streamlit"]
 

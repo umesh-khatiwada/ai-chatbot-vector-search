@@ -1,17 +1,3 @@
-# Copyright 2024 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import google.generativeai as genai
 from langchain.prompts import ChatPromptTemplate
 from langchain.memory import ConversationBufferWindowMemory
@@ -19,6 +5,7 @@ from qdrant_client import QdrantClient
 import streamlit as st
 import os
 from dotenv import load_dotenv
+from styles import get_custom_css, get_welcome_banner, get_footer, format_status_indicator
 
 # Load environment variables
 load_dotenv()
@@ -168,70 +155,7 @@ st.set_page_config(
 )
 
 # Custom CSS for enhanced UI
-st.markdown("""
-<style>
-    .main-header {
-        font-size: 3rem;
-        font-weight: bold;
-        text-align: center;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 2rem;
-    }
-    
-    .chat-container {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 1rem;
-        margin: 1rem 0;
-    }
-    
-    .status-indicator {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem;
-        border-radius: 5px;
-        margin: 1rem 0;
-    }
-    
-    .status-online {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-    
-    .status-offline {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-    
-    .metric-card {
-        background: white;
-        padding: 1rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-    
-    .sidebar-content {
-        background-color: #f1f3f4;
-        padding: 1rem;
-        border-radius: 10px;
-        margin: 1rem 0;
-    }
-    
-    .footer {
-        text-align: center;
-        padding: 2rem;
-        color: #666;
-        border-top: 1px solid #eee;
-        margin-top: 3rem;
-    }
-</style>
-""", unsafe_allow_html=True)
+st.markdown(get_custom_css(), unsafe_allow_html=True)
 
 # Sidebar Configuration
 with st.sidebar:
@@ -247,7 +171,7 @@ with st.sidebar:
         qdrant_status = "🔴 Disconnected"
         qdrant_color = "status-offline"
     
-    st.markdown(f'<div class="status-indicator {qdrant_color}">{qdrant_status} Qdrant Database</div>', unsafe_allow_html=True)
+    st.markdown(format_status_indicator(qdrant_status, "Qdrant Database", qdrant_color), unsafe_allow_html=True)
     
     # API Status
     try:
@@ -263,7 +187,7 @@ with st.sidebar:
         api_status = "🔴 API Key Invalid"
         api_color = "status-offline"
     
-    st.markdown(f'<div class="status-indicator {api_color}">{api_status} Gemini API</div>', unsafe_allow_html=True)
+    st.markdown(format_status_indicator(api_status, "Gemini API", api_color), unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -271,7 +195,7 @@ with st.sidebar:
     st.markdown("### 🎛️ Chat Settings")
     
     # Model selection
-    model_options = ["gemini-pro", "gemini-1.5-pro", "gemini-1.5-flash"]
+    model_options = ["gemini-2.5-pro", "gemini-1.5-pro", "gemini-1.5-flash"]
     current_model = os.getenv("AI_MODEL", "gemini-pro")
     selected_model = st.selectbox("AI Model", model_options, index=model_options.index(current_model) if current_model in model_options else 0)
     
@@ -318,9 +242,9 @@ with st.sidebar:
 
 # Main Chat Interface
 app_title = os.getenv("APP_TITLE", "🤖 AI Chatbot with Vector Search")
-st.markdown(f'<h1 class="main-header">{app_title}</h1>', unsafe_allow_html=True)
+st.markdown(get_welcome_banner(app_title), unsafe_allow_html=True)
 
-# Welcome message and instructions
+# Welcome message (shown only for new sessions)
 if len(st.session_state.get("messages", [])) <= 1:
     st.markdown("""
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
@@ -443,9 +367,4 @@ if chat_input := st.chat_input("💬 Ask me anything about your documents..."):
                 st.session_state.messages.append({"role": "ai", "content": error_msg})
 
 # Footer
-st.markdown("""
-<div class="footer">
-    <p>🤖 Powered by Google Gemini API & Qdrant Vector Database</p>
-    <p>💡 <strong>Tip:</strong> Ask specific questions for better results</p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown(get_footer(), unsafe_allow_html=True)
