@@ -5,13 +5,11 @@ from langchain_community.vectorstores import Qdrant
 import os
 
 file_paths = (
-    "content/faq.md",
-    "content/_index.md",
-    "content/features/_index.md"
+    "content/faq.md"
 )
 docs_count = 0
 files_count = 0
-root_dir = "/Users/hem/Documents/projects/berrybytes/chatbot/chatbot-docs/"
+root_dir = "./chatbot-docs/"
 for file_path in file_paths:
     files_count += 1
     print(f"Loading file {files_count}")
