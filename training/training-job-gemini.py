@@ -34,6 +34,7 @@ load_dotenv()
 # Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+QDRANT_API_KEY = os.getenv("APIKEY")
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "chatbot-docs")
 RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
 QUEUE_NAME = os.getenv("QUEUE_NAME", "embedding_tasks")
@@ -44,8 +45,66 @@ if not GEMINI_API_KEY:
     raise ValueError("❌ GEMINI_API_KEY is missing in .env")
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Init Qdrant
-client = QdrantClient(url=QDRANT_URL)
+# Init Qdrant with better error handling
+def init_qdrant_client():
+    """Initialize Qdrant client with proper error handling"""
+    try:
+        if QDRANT_API_KEY:
+            print(f"✅ Connecting to Qdrant with API key authentication")
+            print(f"🔗 URL: {QDRANT_URL}")
+            
+            # Try different configurations
+            try:
+                # First try with default settings
+                client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+                # Test the connection
+                client.get_collections()
+                print(f"✅ Successfully connected to Qdrant!")
+                return client
+            except Exception as e1:
+                print(f"⚠️ First attempt failed: {e1}")
+                
+                # Try with explicit HTTPS and port
+                if not QDRANT_URL.endswith(':6333') and not QDRANT_URL.endswith(':443'):
+                    url_with_port = QDRANT_URL + ':443' if QDRANT_URL.startswith('https') else QDRANT_URL + ':6333'
+                    print(f"🔄 Trying with explicit port: {url_with_port}")
+                    try:
+                        client = QdrantClient(url=url_with_port, api_key=QDRANT_API_KEY)
+                        client.get_collections()
+                        print(f"✅ Successfully connected with port!")
+                        return client
+                    except Exception as e2:
+                        print(f"⚠️ Port attempt failed: {e2}")
+                
+                # Try with timeout settings
+                print(f"🔄 Trying with timeout settings...")
+                try:
+                    client = QdrantClient(
+                        url=QDRANT_URL, 
+                        api_key=QDRANT_API_KEY,
+                        timeout=30,
+                        prefer_grpc=False
+                    )
+                    client.get_collections()
+                    print(f"✅ Successfully connected with timeout settings!")
+                    return client
+                except Exception as e3:
+                    print(f"❌ All connection attempts failed: {e3}")
+                    raise e3
+        else:
+            print(f"✅ Connecting to Qdrant without authentication")
+            client = QdrantClient(url=QDRANT_URL)
+            client.get_collections()
+            return client
+            
+    except Exception as e:
+        print(f"❌ Failed to connect to Qdrant: {e}")
+        print(f"🔗 URL: {QDRANT_URL}")
+        print(f"🔑 API Key: {'Set' if QDRANT_API_KEY else 'Not Set'}")
+        return None
+
+# Initialize Qdrant client
+client = init_qdrant_client()
 
 def get_embedding(text, model="models/text-embedding-004"):
     try:
@@ -93,6 +152,9 @@ def process_file(file_path, docs_count=0):
                 ))
 
         if points:
+            if not client:
+                print(f"❌ Qdrant client not available. Cannot upload chunks.")
+                return 0
             client.upsert(collection_name=COLLECTION_NAME, points=points)
             print(f"✅ Uploaded {len(points)} chunks from {file_path}")
             return len(points)
@@ -134,6 +196,9 @@ def process_content_directly(content, document_id, source, docs_count=0):
                 ))
 
         if points:
+            if not client:
+                print(f"❌ Qdrant client not available. Cannot upload chunks.")
+                return 0
             client.upsert(collection_name=COLLECTION_NAME, points=points)
             print(f"✅ Uploaded {len(points)} chunks from content: {document_id}")
             return len(points)
@@ -198,6 +263,10 @@ Yes! You can add content through the queue system or by placing files in the con
     
     # Ensure collection exists
     try:
+        if not client:
+            print(f"❌ Qdrant client not available. Skipping training.")
+            return 0
+            
         if not client.collection_exists(COLLECTION_NAME):
             print(f"⚠️ Collection '{COLLECTION_NAME}' not found. Creating it...")
             client.create_collection(
@@ -209,6 +278,8 @@ Yes! You can add content through the queue system or by placing files in the con
             print(f"✅ Using existing collection: {COLLECTION_NAME}")
     except Exception as e:
         print(f"❌ Error with collection: {e}")
+        print(f"💡 Tip: Check if your Qdrant instance is running and accessible")
+        print(f"💡 Tip: Verify your Qdrant URL and API key are correct")
         return 0
     
     # Process each file
