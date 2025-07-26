@@ -58,3 +58,28 @@ spec:
       port: 80
       targetPort: 8501
   type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  name: chatbot-ingress
+  namespace: chatbot
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: chatbot.do.umeshkhatiwada.com.np
+    http:
+      paths:
+      - backend:
+          service:
+            name: chatbot
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - chatbot.do.umeshkhatiwada.com.np
+    secretName: chatbot-tls
