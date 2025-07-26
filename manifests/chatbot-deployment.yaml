@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: chatbot
-          image: docker.io/umesh1212/chatbot:v1
+          image: docker.io/umesh1212/chatbot:v4
           ports:
             - containerPort: 8501
           env:
@@ -39,8 +39,8 @@ spec:
               value: "Welcome! How can I help you?"
           resources:
             limits:
-              memory: "100Mi"
-              cpu: "100m"
+              memory: "300Mi"
+              cpu: "300m"
             requests:
               memory: "25Mi"
               cpu: "25m"
@@ -62,24 +62,28 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
   name: chatbot-ingress
   namespace: chatbot
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/enable-websocket: "true"
 spec:
   ingressClassName: nginx
-  rules:
-  - host: chatbot.do.umeshkhatiwada.com.np
-    http:
-      paths:
-      - backend:
-          service:
-            name: chatbot
-            port:
-              number: 80
-        path: /
-        pathType: Prefix
   tls:
-  - hosts:
-    - chatbot.do.umeshkhatiwada.com.np
-    secretName: chatbot-tls
+    - hosts:
+        - chatbot.do.umeshkhatiwada.com.np
+      secretName: chatbot-tls
+  rules:
+    - host: chatbot.do.umeshkhatiwada.com.np
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: chatbot
+                port:
+                  number: 80  # The internal service port
