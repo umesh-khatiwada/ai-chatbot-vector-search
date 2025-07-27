@@ -403,11 +403,22 @@ def start_worker():
         import urllib.parse
         import time
         parsed_url = urllib.parse.urlparse(RABBITMQ_URL)
-        
+
+        # --- Begin protocol/port validation ---
+        # If using amqps, ensure port is 5671 (default for SSL)
+        if parsed_url.scheme == 'amqps' and parsed_url.port != 5671:
+            print(f"WARNING: You are using amqps:// but port is {parsed_url.port}. RabbitMQ SSL usually runs on port 5671.")
+            print(f"   - If you are connecting to a managed service, verify the correct port for SSL.")
+            print(f"   - If you are connecting to localhost, you may need to use amqp:// and port 5672 instead.")
+        # If using amqp, ensure port is 5672 (default for non-SSL)
+        if parsed_url.scheme == 'amqp' and parsed_url.port != 5672:
+            print(f"WARNING: You are using amqp:// but port is {parsed_url.port}. RabbitMQ non-SSL usually runs on port 5672.")
+        # --- End protocol/port validation ---
+
         max_retries = 3
         retry_count = 0
         connection = None
-        
+
         while retry_count < max_retries and connection is None:
             try:
                 if parsed_url.scheme == 'amqps':
@@ -422,20 +433,38 @@ def start_worker():
                     params.socket_timeout = 30
                     params.heartbeat = 600
                     params.blocked_connection_timeout = 300
-                    
+
                     print(f" Attempting to connect (try {retry_count + 1}/{max_retries})...")
-                    connection = pika.BlockingConnection(params)
+                    print(f"   Host: {parsed_url.hostname}, Port: {parsed_url.port}")
+                    try:
+                        connection = pika.BlockingConnection(params)
+                    except Exception as ssl_error:
+                        print(f" SSL connection failed: {ssl_error}")
+                        # Fallback: If SSL fails and port is not 5671, suggest switching to amqp://
+                        if parsed_url.port != 5671:
+                            print(f"❗ SSL error may be due to incorrect port. Try using amqp:// with port 5672 if connecting to localhost or non-SSL RabbitMQ.")
+                        # Additional diagnostics for handshake/timeout errors
+                        if "handshake" in str(ssl_error).lower() or "timeout" in str(ssl_error).lower():
+                            print("🔎 Troubleshooting SSL handshake/timeout:")
+                            print(f"   - Host: {parsed_url.hostname}")
+                            print(f"   - Port: {parsed_url.port}")
+                            print("   - Verify the hostname is correct and reachable (ping or nslookup).")
+                            print("   - Ensure port 5671 is open and RabbitMQ is listening for SSL connections.")
+                            print("   - Check your credentials and SSL certificate requirements.")
+                            print("   - If using CloudAMQP, confirm your instance is running and supports SSL on this port.")
+                            print("   - Try connecting with a RabbitMQ client (e.g., rabbitmqadmin) to verify connectivity.")
+                        raise
                 else:
                     print("🔓 Using regular connection for local RabbitMQ")
                     connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
-                
+
                 print(" Successfully connected to RabbitMQ!")
                 break
-                
+
             except Exception as conn_error:
                 retry_count += 1
                 print(f" Connection attempt {retry_count} failed: {conn_error}")
-                
+
                 if retry_count < max_retries:
                     wait_time = retry_count * 5
                     print(f"Waiting {wait_time} seconds before retry...")
@@ -446,6 +475,7 @@ def start_worker():
                     print(f"   - Verify your CloudAMQP URL and credentials")
                     print(f"   - Check firewall/network connectivity")
                     print(f"   - Try using a different CloudAMQP region")
+                    print(f"   - If you see SSL errors, verify protocol and port (amqps://:5671 for SSL, amqp://:5672 for non-SSL)")
                     raise conn_error
         
         if connection is None:
