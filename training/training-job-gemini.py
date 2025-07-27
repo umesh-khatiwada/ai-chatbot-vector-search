@@ -280,13 +280,11 @@ def callback(ch, method, properties, body):
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         try:
-            # First, try to parse as direct JSON
             data = json.loads(raw_content)
             print(f"Successfully parsed as direct JSON")
         except json.JSONDecodeError:
             print(f"Not valid JSON, treating as plain text content")
             if len(raw_content.strip()) > 0:
-                # Create a JSON structure from the plain text
                 data = {
                     "content": raw_content,
                     "document_id": f"plain_text_{hash(raw_content) % 100000}",
@@ -401,12 +399,9 @@ def start_worker():
     print(f"Listening for tasks on queue '{QUEUE_NAME}'...")
     
     try:
-        # Handle SSL connection for CloudAMQP
         import ssl
         import urllib.parse
         import time
-        
-        # Parse the URL to check if it's SSL
         parsed_url = urllib.parse.urlparse(RABBITMQ_URL)
         
         max_retries = 3
@@ -474,7 +469,7 @@ def start_worker():
                 print(f" Using existing queue '{QUEUE_NAME}' with {method.method.message_count} messages")
             except Exception as passive_error:
                 print(f" Passive declaration also failed: {passive_error}")
-                print(f"💡 Try using the manage_queue.py script to reset the queue")
+                print(f" Try using the manage_queue.py script to reset the queue")
                 connection.close()
                 raise passive_error
         
