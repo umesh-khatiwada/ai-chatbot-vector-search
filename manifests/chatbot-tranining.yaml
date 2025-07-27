@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: chatbot-training
-          image: docker.io/umesh1212/chatbot-traininig:v3
+          image: docker.io/umesh1212/chatbot-traininig:v4
           ports:
             - containerPort: 80
           env:
@@ -34,7 +34,7 @@ spec:
             - name: TEXT_EMBED
               value: "text-embedding-005"
             - name: APP_TITLE
-              value: "🤖 Chatbot"
+              value: "Chatbot"
             - name: APP_CONTENT
               value: "Welcome! How can I help you?"
             - name: RABBITMQ_URL
